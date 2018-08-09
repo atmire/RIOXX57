@@ -88,6 +88,9 @@ public class ProjectAuthorityValue extends AuthorityValue {
         if (funderAuthorityValue!=null && StringUtils.isNotBlank(funderAuthorityValue.getValue())) {
             map.put("Funder", funderAuthorityValue.getValue());
         }
+        if (funderAuthorityValue!=null && StringUtils.isNotBlank(funderAuthorityValue.getValue())) {
+            map.put("Funder-Id", funderAuthorityValue.getFunderID());
+        }
         return map;
     }
 

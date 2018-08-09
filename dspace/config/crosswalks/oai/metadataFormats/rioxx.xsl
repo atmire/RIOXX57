@@ -179,7 +179,8 @@
                 </rioxxterms:author>
             </xsl:for-each>
 
-            <xsl:for-each select="doc:metadata/doc:element[@name='dc']/doc:element[@name='contributor']/doc:element[not(@name='author')]/doc:element/doc:field[@name='value']">
+            <xsl:for-each select="doc:metadata/doc:element[@name='dc']/doc:element[@name='contributor']/doc:element[not(@name='author')]/doc:element/doc:field[@name='value']
+                                    | doc:metadata/doc:element[@name='dc']/doc:element[@name='contributor']/doc:element/doc:field[@name='value']">
                 <rioxxterms:contributor>
                     <xls:value-of select="."/>
                 </rioxxterms:contributor>
