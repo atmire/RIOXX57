@@ -20,6 +20,7 @@ public class RioxxProjectFunderEnricher implements MetaDatumEnricher {
     private static final String IDENTIFIER_ELEMENT = "identifier";
     private static final String PROJECT_QUALIFIER = "project";
     private static final String FUNDER_ELEMENT = "funder";
+    private static final String ID_QUALIFIER = "id";
 
     private ProjectService projectService;
 
@@ -46,9 +47,10 @@ public class RioxxProjectFunderEnricher implements MetaDatumEnricher {
                         String language = metadatum.language;
                         int confidence = metadatum.confidence;
                         //If we do, create a new "fake" metadata value that contains the link between the project and the funder
-                        Metadatum newMetadatum = createProjectFunderRelationMetadatumRecord(authorityValue, language, confidence);
+                        newMetaData.add(createProjectFunderRelationMetadatumRecord(authorityValue, language, confidence));
 
-                        newMetaData.add(newMetadatum);
+                        //also expose the funder ID
+                        newMetaData.add(createFunderIdMetadatumRecord(authorityValue, language, confidence));
                     }
                 }
             }
@@ -69,6 +71,18 @@ public class RioxxProjectFunderEnricher implements MetaDatumEnricher {
 
         //Store the project authority in the value field
         newMetadatum.value = authorityValue.getId();
+        return newMetadatum;
+    }
+
+    public static Metadatum createFunderIdMetadatumRecord(final ProjectAuthorityValue authorityValue, final String language, final int confidence) {
+        Metadatum newMetadatum = new Metadatum();
+        newMetadatum.schema = RIOXX_SHEMA;
+        newMetadatum.element = FUNDER_ELEMENT;
+        newMetadatum.qualifier = ID_QUALIFIER;
+        newMetadatum.language = language;
+
+        //Store the Funder ID in the value field
+        newMetadatum.value = authorityValue.getFunderAuthorityValue().getFunderID();
         return newMetadatum;
     }
 

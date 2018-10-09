@@ -343,7 +343,7 @@ public class ItemAdapter extends AbstractAdapter
             // ///////////////////////////////
             // Send the actual XML content
             try {
-                Element dissemination = crosswalk.disseminateElement(item);
+                Element dissemination = disseminateElement(crosswalk, item);
 
                 SAXFilter filter = new SAXFilter(contentHandler, lexicalHandler, namespaces);
                 // Allow the basics for XML
@@ -622,7 +622,7 @@ public class ItemAdapter extends AbstractAdapter
         // Send the actual XML content,
         // using the PREMIS crosswalk for each bitstream
         try {
-            Element dissemination = crosswalk.disseminateElement(dso);
+            Element dissemination = disseminateElement(crosswalk, dso);
 
             SAXFilter filter = new SAXFilter(contentHandler, lexicalHandler, namespaces);
             // Allow the basics for XML
@@ -648,6 +648,17 @@ public class ItemAdapter extends AbstractAdapter
         endElement(METS,"xmlData");
         endElement(METS,"mdWrap");
         endElement(METS,amdSecName);
+    }
+
+    private Element disseminateElement(DisseminationCrosswalk crosswalk, DSpaceObject dso) throws CrosswalkException, IOException, SQLException, AuthorizeException {
+        Element dissemination;
+        if(crosswalk instanceof ContextAwareDisseminationCrosswalk)
+        {
+            ((ContextAwareDisseminationCrosswalk)crosswalk).setContext(context);
+        }
+        dissemination = crosswalk.disseminateElement(dso);
+
+        return dissemination;
     }
 
     /**
@@ -877,7 +888,7 @@ public class ItemAdapter extends AbstractAdapter
                 SAXFilter filter = new SAXFilter(contentHandler, lexicalHandler, namespaces);
                 // Allow the basics for XML
                 filter.allowIgnorableWhitespace().allowCharacters().allowCDATA().allowPrefixMappings();
-                // Special option, only allow elements below the second level to pass through. This
+                        // Sp@ecial option, only allow elements below the second level to pass through. This
                 // will trim out the METS declaration and only leave the actual METS parts to be
                 // included.
                 filter.allowElements(1);

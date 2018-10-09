@@ -9,7 +9,7 @@
 
 	Developed by DSpace @ Lyncode <dspace@lyncode.com>
  -->
-<Configuration indented="false" maxListIdentifiersSize="100" maxListRecordsSize="100"
+<Configuration indented="true" maxListIdentifiersSize="100" maxListRecordsSize="100"
                maxListSetsSize="100" stylesheet="static/style.xsl"
                xmlns="http://www.lyncode.com/XOAIConfiguration">
 
@@ -94,7 +94,7 @@
             <Transformer ref="rioxxTransformer"/>
             <Filter ref="rioxxFilter"/>
             <!-- Metadata Formats -->
-	        <Format ref="oaidc"/>
+            <Format ref="oaidc"/>
             <Format ref="rioxx"/>
             <Format ref="xoai"/>
             <Description>
@@ -352,10 +352,10 @@
                                             <LeftCondition>
                                                 <Or>
                                                     <LeftCondition>
-                                                        <Custom ref="itemsWithBitstreamsFilter"/>
+                                                        <Custom ref="openAccessUriAvailable"/>
                                                     </LeftCondition>
                                                     <RightCondition>
-                                                        <Custom ref="openAccessUriAvailable"/>
+                                                        <Custom ref="itemsWithBitstreamsFilter"/>
                                                     </RightCondition>
                                                 </Or>
                                             </LeftCondition>
@@ -397,8 +397,8 @@
         <Filter id="defaultFilter">
             <Definition>
                 <Custom ref="bitstreamAccessCondition"/>
-		    </Definition>
-	    </Filter>
+            </Definition>
+        </Filter>
 
         <!-- This condition determines if an Item has a "dc.type" field
              which contains "Thesis". -->
@@ -462,7 +462,7 @@
             </Configuration>
         </CustomCondition>
 
-       <CustomCondition id="rioxxLangExistsCondition">
+        <CustomCondition id="rioxxLangExistsCondition">
             <Class>org.dspace.xoai.filter.DSpaceMetadataExistsFilter</Class>
             <Configuration>
                 <list name="fields">

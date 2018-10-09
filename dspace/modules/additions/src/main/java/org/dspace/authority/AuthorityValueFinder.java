@@ -77,6 +77,11 @@ public class AuthorityValueFinder {
         return findings.size() > 0 ? findings.get(0) : null;
     }
 
+    public List<AuthorityValue> findByFieldAndValue(Context context, String field, String value) {
+        String queryString = field + ":\"" + value + "\"";
+        return find(context, queryString);
+    }
+
     public List<AuthorityValue> findByName(Context context, String schema, String element, String qualifier, String name) {
         String field = fieldParameter(schema, element, qualifier);
         String queryString = "first_name:\"" + name + "\" OR last_name:\"" + name + "\" OR name_variant:\"" + name + "\" AND field:\"" + field + "\"";

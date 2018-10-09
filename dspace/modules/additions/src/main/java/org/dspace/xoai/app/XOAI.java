@@ -109,7 +109,7 @@ public class XOAI {
             if (clean) {
                 clearIndex();
                 System.out.println("Using full import.");
-                this.indexAll();
+                result = this.indexAll();
             } else {
                 SolrQuery solrParams = new SolrQuery("*:*")
                         .addField("item.lastmodified")
@@ -148,10 +148,11 @@ public class XOAI {
         System.out
                 .println("Incremental import. Searching for documents modified after: "
                         + last.toString());
-
-        String sqlQuery = "SELECT item_id FROM item WHERE in_archive=TRUE AND discoverable=TRUE AND last_modified > ?";
+        // Index both in_archive items AND withdrawn items. Withdrawn items will be flagged withdrawn
+        // (in order to notify external OAI harvesters of their new status)
+        String sqlQuery = "SELECT item_id FROM item WHERE (in_archive=TRUE OR withdrawn=TRUE) AND discoverable=TRUE AND last_modified > ?";
         if(DatabaseManager.isOracle()){
-                sqlQuery = "SELECT item_id FROM item WHERE in_archive=1 AND discoverable=1 AND last_modified > ?";
+                sqlQuery = "SELECT item_id FROM item WHERE (in_archive=1 OR withdrawn=1) AND discoverable=1 AND last_modified > ?";
         }
 
         try {
@@ -168,10 +169,11 @@ public class XOAI {
     private int indexAll() throws DSpaceSolrIndexerException {
         System.out.println("Full import");
         try {
-
-            String sqlQuery = "SELECT item_id FROM item WHERE in_archive=TRUE AND discoverable=TRUE";
+            // Index both in_archive items AND withdrawn items. Withdrawn items will be flagged withdrawn
+            // (in order to notify external OAI harvesters of their new status)
+            String sqlQuery = "SELECT item_id FROM item WHERE (in_archive=TRUE OR withdrawn=TRUE) AND discoverable=TRUE";
             if(DatabaseManager.isOracle()){
-                sqlQuery = "SELECT item_id FROM item WHERE in_archive=1 AND discoverable=1";
+                sqlQuery = "SELECT item_id FROM item WHERE (in_archive=1 OR withdrawn=1) AND discoverable=1";
             }
 
             TableRowIterator iterator = DatabaseManager.query(context,
@@ -225,7 +227,9 @@ public class XOAI {
         String handle = item.getHandle();
         doc.addField("item.handle", handle);
         doc.addField("item.lastmodified", item.getLastModified());
+        if (item.getSubmitter() != null) {
         doc.addField("item.submitter", item.getSubmitter().getEmail());
+        }
         doc.addField("item.deleted", item.isWithdrawn() ? "true" : "false");
         for (Collection col : item.getCollections())
             doc.addField("item.collections",
@@ -341,6 +345,8 @@ public class XOAI {
         XOAICacheService cacheService = applicationContext.getBean(XOAICacheService.class);
         XOAIItemCacheService itemCacheService = applicationContext.getBean(XOAIItemCacheService.class);
 
+        Context ctx = null;
+
         try {
             CommandLineParser parser = new PosixParser();
             Options options = new Options();
@@ -380,7 +386,7 @@ public class XOAI {
                 String command = line.getArgs()[0];
 
                 if (COMMAND_IMPORT.equals(command)) {
-                    Context ctx = new Context();
+                    ctx = new Context();
                     XOAI indexer = new XOAI(ctx,
                             line.hasOption('o'),
                             line.hasOption('c'),
@@ -390,21 +396,17 @@ public class XOAI {
 
                     int imported = indexer.index();
                     if (imported > 0) cleanCache(itemCacheService, cacheService);
-
-                    ctx.abort();
                 } else if (COMMAND_CLEAN_CACHE.equals(command)) {
                     cleanCache(itemCacheService, cacheService);
                 } else if (COMMAND_COMPILE_ITEMS.equals(command)) {
 
-                    Context ctx = new Context();
+                    ctx = new Context();
                     XOAI indexer = new XOAI(ctx, line.hasOption('v'));
                     applicationContext.getAutowireCapableBeanFactory().autowireBean(indexer);
 
                     indexer.compile();
 
                     cleanCache(itemCacheService, cacheService);
-
-                    ctx.abort();
                 } else if (COMMAND_ERASE_COMPILED_ITEMS.equals(command)) {
                     cleanCompiledItems(itemCacheService);
                     cleanCache(itemCacheService, cacheService);
@@ -421,6 +423,12 @@ public class XOAI {
                 ex.printStackTrace();
             }
             log.error(ex.getMessage(), ex);
+        }
+        finally
+        {
+            // Abort our context, if still open
+            if(ctx!=null && ctx.isValid())
+                ctx.abort();
         }
     }
 
